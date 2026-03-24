@@ -51,18 +51,33 @@ function drawAuraCard(
   ctx.fillText(emotionLabel, centerX, h * 0.78);
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-  ctx.font = "14px 'Helvetica Neue', Arial, sans-serif";
-  ctx.fillText(comment, centerX, h * 0.84);
+  ctx.font = "12px 'Helvetica Neue', Arial, sans-serif";
+  ctx.textAlign = "center";
+  const maxWidth = w * 0.8;
+  const words = comment.split("");
+  let line = "";
+  let lineY = h * 0.83;
+  for (const char of words) {
+    const testLine = line + char;
+    if (ctx.measureText(testLine).width > maxWidth && line) {
+      ctx.fillText(line, centerX, lineY);
+      line = char;
+      lineY += 18;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, centerX, lineY);
 
   const today = new Date();
   const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, "0")}.${String(today.getDate()).padStart(2, "0")}`;
   ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
-  ctx.font = "12px 'Helvetica Neue', Arial, sans-serif";
-  ctx.fillText(dateStr, centerX, h * 0.92);
+  ctx.font = "11px 'Helvetica Neue', Arial, sans-serif";
+  ctx.fillText(dateStr, centerX, h * 0.94);
 
   ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
   ctx.font = "10px 'Helvetica Neue', Arial, sans-serif";
-  ctx.fillText("Aura", centerX, h * 0.96);
+  ctx.fillText("Aura", centerX, h * 0.98);
 }
 
 function getDateTimeContext(): DateTimeContext {
@@ -240,7 +255,7 @@ export default function CreatePage() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-dvh px-6 py-12">
+    <div className="flex flex-col items-center min-h-dvh px-4 py-10">
       <div className="w-full max-w-md mb-8 relative z-50">
         <Link href="/" className="inline-block text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer py-2 pr-4">
           ← 戻る
@@ -289,7 +304,7 @@ export default function CreatePage() {
             ref={canvasRef}
             width={400}
             height={520}
-            className="rounded-3xl shadow-2xl mb-6 w-full max-w-[320px]"
+            className="rounded-3xl shadow-2xl mb-6 w-full max-w-[280px]"
           />
 
           {/* Color palette */}
