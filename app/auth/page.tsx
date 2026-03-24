@@ -67,7 +67,7 @@ export default function AuthPage() {
         {error && <p className="mt-6 text-sm text-red-400 text-center">{error}</p>}
 
         <p className="mt-8 text-xs text-white/20 text-center leading-relaxed">
-          Googleアカウントで安全にログインできます
+          ログインすることで、<Link href="/terms" className="underline hover:text-white/40">利用規約</Link>と<Link href="/privacy" className="underline hover:text-white/40">プライバシーポリシー</Link>に同意したものとみなされます。
         </p>
       </div>
     </div>
