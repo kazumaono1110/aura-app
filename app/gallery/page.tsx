@@ -68,6 +68,22 @@ export default function GalleryPage() {
     }
   }, [user, supabase, authLoading]);
 
+  const handleDelete = async (entry: AuraEntry) => {
+    if (!confirm("このオーラを削除しますか？")) return;
+
+    if (user && supabase) {
+      await supabase.from("auras").delete().eq("id", entry.id);
+    }
+
+    // localStorageからも削除
+    const saved = JSON.parse(localStorage.getItem("aura_history") || "[]");
+    const filtered = saved.filter((e: AuraEntry) => e.id !== entry.id);
+    localStorage.setItem("aura_history", JSON.stringify(filtered));
+
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+    setSelected(null);
+  };
+
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
     return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -291,13 +307,21 @@ export default function GalleryPage() {
                   </div>
                 </div>
 
-                {/* Close button */}
-                <button
-                  onClick={() => setSelected(null)}
-                  className="mt-6 w-full py-3 rounded-full bg-white/10 text-white/60 text-sm font-medium hover:bg-white/15 transition-colors"
-                >
-                  閉じる
-                </button>
+                {/* Actions */}
+                <div className="mt-6 flex gap-3">
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="flex-1 py-3 rounded-full bg-white/10 text-white/60 text-sm font-medium hover:bg-white/15 transition-colors"
+                  >
+                    閉じる
+                  </button>
+                  <button
+                    onClick={() => handleDelete(selected)}
+                    className="py-3 px-5 rounded-full bg-red-500/15 text-red-400 text-sm font-medium hover:bg-red-500/25 transition-colors"
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
             </div>
           )}
