@@ -94,6 +94,7 @@ export default function CreatePage() {
   const [mood, setMood] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuraResult | null>(null);
+  const [auraId, setAuraId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
@@ -103,9 +104,11 @@ export default function CreatePage() {
   useEffect(() => {
     const saved = sessionStorage.getItem("aura_latest_result");
     const savedMood = sessionStorage.getItem("aura_latest_mood");
+    const savedId = sessionStorage.getItem("aura_latest_id");
     if (saved) {
       setResult(JSON.parse(saved));
       if (savedMood) setMood(savedMood);
+      if (savedId) setAuraId(savedId);
     }
   }, []);
 
@@ -120,6 +123,7 @@ export default function CreatePage() {
       );
       sessionStorage.setItem("aura_latest_result", JSON.stringify(result));
       sessionStorage.setItem("aura_latest_mood", mood);
+      if (auraId) sessionStorage.setItem("aura_latest_id", auraId);
     }
   }, [result]);
 
@@ -173,8 +177,9 @@ export default function CreatePage() {
       const now = new Date().toISOString();
 
       // Supabaseに保存（ログイン時）
+      let savedId: string | null = null;
       if (user && supabase) {
-        await supabase.from("auras").insert({
+        const { data: inserted } = await supabase.from("auras").insert({
           user_id: user.id,
           input: mood.trim(),
           primary_color: data.primary,
@@ -192,8 +197,10 @@ export default function CreatePage() {
           trend: data.trend,
           weather_temp: null,
           weather_condition: null,
-        });
+        }).select("id").single();
+        savedId = inserted?.id ?? null;
       }
+      setAuraId(savedId);
 
       // ローカルストレージにも保存
       const saved = JSON.parse(localStorage.getItem("aura_history") || "[]");
@@ -214,6 +221,9 @@ export default function CreatePage() {
   };
 
   const [showShareMenu, setShowShareMenu] = useState(false);
+
+  const getShareUrl = () =>
+    auraId ? `https://aura-app-ecru.vercel.app/share/${auraId}` : "https://aura-app-ecru.vercel.app";
 
   const getShareText = () =>
     `今日のオーラは「${result?.emotion_label}」でした ✨ 相性の良い色は${result?.compatible_color}`;
@@ -236,14 +246,14 @@ export default function CreatePage() {
   };
 
   const shareToLine = () => {
-    const text = encodeURIComponent(getShareText() + "\n\nhttps://aura-app-ecru.vercel.app");
+    const text = encodeURIComponent(getShareText() + "\n\n" + getShareUrl());
     window.open(`https://line.me/R/share?text=${text}`, "_blank");
     setShowShareMenu(false);
   };
 
   const shareToX = () => {
     const text = encodeURIComponent(getShareText());
-    const url = encodeURIComponent("https://aura-app-ecru.vercel.app");
+    const url = encodeURIComponent(getShareUrl());
     window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, "_blank");
     setShowShareMenu(false);
   };
@@ -272,10 +282,12 @@ export default function CreatePage() {
   const handleReset = () => {
     setMood("");
     setResult(null);
+    setAuraId(null);
     setError("");
     setShowShareMenu(false);
     sessionStorage.removeItem("aura_latest_result");
     sessionStorage.removeItem("aura_latest_mood");
+    sessionStorage.removeItem("aura_latest_id");
   };
 
   return (
