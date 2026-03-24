@@ -99,6 +99,17 @@ export default function CreatePage() {
   const router = useRouter();
   const { user, supabase } = useAuth();
 
+  // sessionStorageから結果を復元
+  useEffect(() => {
+    const saved = sessionStorage.getItem("aura_latest_result");
+    const savedMood = sessionStorage.getItem("aura_latest_mood");
+    if (saved) {
+      setResult(JSON.parse(saved));
+      if (savedMood) setMood(savedMood);
+    }
+  }, []);
+
+  // 結果が変わったらcanvas描画 + sessionStorage保存
   useEffect(() => {
     if (result && canvasRef.current) {
       drawAuraCard(
@@ -107,6 +118,8 @@ export default function CreatePage() {
         result.emotion_label,
         result.comment
       );
+      sessionStorage.setItem("aura_latest_result", JSON.stringify(result));
+      sessionStorage.setItem("aura_latest_mood", mood);
     }
   }, [result]);
 
@@ -238,13 +251,21 @@ export default function CreatePage() {
   const shareToInstagram = async () => {
     const blob = await getCanvasBlob();
     if (!blob) return;
-    if (navigator.share) {
+
+    // スマホ: Web Share APIでInstagramを含む共有メニューを表示
+    if (navigator.share && navigator.canShare) {
       const file = new File([blob], "aura-card.png", { type: "image/png" });
-      await navigator.share({ files: [file] }).catch(() => {});
-    } else {
-      await downloadImage();
-      alert("画像を保存しました。Instagramアプリでストーリーに投稿してください。");
+      const shareData = { files: [file] };
+      if (navigator.canShare(shareData)) {
+        await navigator.share(shareData).catch(() => {});
+        setShowShareMenu(false);
+        return;
+      }
     }
+
+    // PC/非対応: 画像をダウンロード
+    await downloadImage();
+    alert("画像を保存しました。Instagramアプリを開いてストーリーに投稿してください。");
     setShowShareMenu(false);
   };
 
@@ -252,6 +273,9 @@ export default function CreatePage() {
     setMood("");
     setResult(null);
     setError("");
+    setShowShareMenu(false);
+    sessionStorage.removeItem("aura_latest_result");
+    sessionStorage.removeItem("aura_latest_mood");
   };
 
   return (
