@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
-import type { AuraResult, AuraHistoryItem, WeatherData, DateTimeContext } from "@/lib/types";
+import type { AuraResult, AuraHistoryItem, DateTimeContext } from "@/lib/types";
 
 function drawAuraCard(
   canvas: HTMLCanvasElement,
@@ -75,18 +75,6 @@ function getDateTimeContext(): DateTimeContext {
   return { dayOfWeek: days[now.getDay()], timeOfDay, season };
 }
 
-async function fetchWeather(): Promise<WeatherData | null> {
-  try {
-    const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-    );
-    const res = await fetch(`/api/weather?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
 export default function CreatePage() {
   const [mood, setMood] = useState("");
   const [loading, setLoading] = useState(false);
@@ -139,16 +127,13 @@ export default function CreatePage() {
     setResult(null);
 
     try {
-      const [history, weather] = await Promise.all([
-        getHistory(),
-        fetchWeather(),
-      ]);
+      const history = await getHistory();
       const datetime = getDateTimeContext();
 
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood: mood.trim(), history, weather, datetime }),
+        body: JSON.stringify({ mood: mood.trim(), history, datetime }),
       });
 
       if (!res.ok) {
@@ -177,8 +162,8 @@ export default function CreatePage() {
           personality_detail: data.personality_detail,
           advice: data.advice,
           trend: data.trend,
-          weather_temp: weather?.temp ?? null,
-          weather_condition: weather?.condition ?? null,
+          weather_temp: null,
+          weather_condition: null,
         });
       }
 
