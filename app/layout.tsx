@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/components/AuthContext";
 import "./globals.css";
 
@@ -30,6 +31,7 @@ export default function RootLayout({
     <html lang="ja" className="h-full antialiased">
       <body className="min-h-dvh flex flex-col bg-[#0a0a0a] text-white">
         <AuthProvider>{children}</AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
