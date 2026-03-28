@@ -222,8 +222,19 @@ export default function CreatePage() {
 
   const [showShareMenu, setShowShareMenu] = useState(false);
 
-  const getShareUrl = () =>
-    auraId ? `https://aura-app-ecru.vercel.app/share/${auraId}` : "https://aura-app-ecru.vercel.app";
+  const getShareUrl = () => {
+    if (!result) return "https://aura-app-ecru.vercel.app";
+    const params = new URLSearchParams({
+      primary: result.primary,
+      secondary: result.secondary,
+      tertiary: result.tertiary,
+      emotion_label: result.emotion_label,
+      comment: result.comment,
+      personality_mode: result.personality_mode,
+      input: mood,
+    });
+    return `https://aura-app-ecru.vercel.app/share?${params.toString()}`;
+  };
 
   const getShareText = () =>
     `今日のオーラは「${result?.emotion_label}」でした ✨ 相性の良い色は${result?.compatible_color}`;
